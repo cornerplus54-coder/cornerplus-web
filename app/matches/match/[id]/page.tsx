@@ -201,7 +201,7 @@ export default function MatchDetailPage() {
                 <button
                   onClick={() => 
                     router.push(
-                      `/matches/match/${encodeURIComponent(String((m as any).id ?? ""))}`
+                      `/matches/match/${encodeURIComponent(String((match as any)?.id ?? ""))}`
                     )
                    }
                   className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"

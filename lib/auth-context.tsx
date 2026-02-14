@@ -15,6 +15,7 @@ type UserDoc = {
 type AuthCtx = {
   user: User | null;
   loading: boolean;
+  authLoading: boolean; // ✅ eklendi (loading ile aynı)
   userDoc: UserDoc | null;
   isPremium: boolean;
 };
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {
       user,
       loading,
+      authLoading: loading, // ✅ eklendi
       userDoc,
       isPremium: !!userDoc?.isPremium,
     };
