@@ -106,44 +106,66 @@ export async function POST(req: Request) {
   const premiumUntil = new Date(now + 30 * 24 * 60 * 60 * 1000);
 
   try {
-    const a = getAdmin();
-    const db = a.firestore();
+  const a = getAdmin();
+  const db = a.firestore();
 
-    // users koleksiyonunda email eşle
-    const snap = await db
-      .collection("users")
-      .where("email", "==", email)
-      .limit(1)
-      .get();
+  // users koleksiyonunda email eşle
+  const snap = await db
+    .collection("users")
+    .where("email", "==", email)
+    .limit(1)
+    .get();
 
-    if (snap.empty) {
-      // kullanıcı daha giriş yapmadıysa kaybetmeyelim → pending yaz
-      await db.collection("premium_pending").add({
-        email,
-        payload,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+  if (snap.empty) {
+    // kullanıcı daha giriş yapmadıysa kaydetmeyelim -> pending yaz
+    await db.collection("premium_pending").add({
+      email,
+      payload,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
-      // Shopier tekrar tekrar denemesin diye success dönüyoruz
-      return new NextResponse("success", { status: 200 });
-    }
-
-    const docRef = snap.docs[0].ref;
-
-    await docRef.set(
-      {
-        isPremium: true,
-        premiumUntil: admin.firestore.Timestamp.fromDate(premiumUntil),
-        premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        premiumSource: "shopier",
-      },
-      { merge: true }
-    );
-
-    // Shopier'in beklediği cevap
+    // Shopier tekrar tekrar denemesin diye success dönüyoruz
     return new NextResponse("success", { status: 200 });
-  } catch (e) {
-    // Hata olursa 500 → (Shopier retry ederse tekrar deneyebilir)
-    return new NextResponse("server_error", { status: 500 });
   }
+
+  const docRef = snap.docs[0].ref;
+
+  // ✅ Premium: 30 gün (renew/extend destekli)
+const now = Date.now();
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+const existing = (snap.docs[0].data()?.premiumUntil as any) ?? null;
+
+let existingMs: number | null = null;
+
+if (existing && typeof existing.toDate === "function") {
+  // Firestore Timestamp
+  existingMs = existing.toDate().getTime();
+} else if (existing instanceof Date) {
+  existingMs = existing.getTime();
+} else if (typeof existing === "number") {
+  existingMs = existing;
+}
+
+// Mevcut süre gelecekteyse onun üstüne ekle, değilse bugünden başla
+const baseMs = existingMs && existingMs > now ? existingMs : now;
+const premiumUntil = new Date(baseMs + THIRTY_DAYS_MS);
+
+
+  await docRef.set(
+    {
+      isPremium: true,
+      premiumUntil: admin.firestore.Timestamp.fromDate(premiumUntil),
+      premiumUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      premiumSource: "shopier",
+    },
+    { merge: true }
+  );
+
+  // Shopier'in beklediği cevap
+  return new NextResponse("success", { status: 200 });
+} catch (e) {
+  // Hata olursa 500 -> (Shopier retry ederse tekrar deneyebilir)
+  return new NextResponse("server_error", { status: 500 });
+}
 }

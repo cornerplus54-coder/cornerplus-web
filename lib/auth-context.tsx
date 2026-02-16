@@ -8,6 +8,9 @@ import { auth, db } from "./firebase";
 type UserDoc = {
   email?: string;
   isPremium?: boolean;
+  premiumUntil?: any; // Firestore Timestamp olabilir
+  premiumSource?: string;
+  premiumUpdatedAt?: any;
   createdAt?: any;
   updatedAt?: any;
 };
@@ -15,12 +18,37 @@ type UserDoc = {
 type AuthCtx = {
   user: User | null;
   loading: boolean;
-  authLoading: boolean; // ✅ eklendi (loading ile aynı)
+
+  // ✅ alias (register sayfası bunu istiyor)
+  authLoading: boolean;
+
   userDoc: UserDoc | null;
   isPremium: boolean;
 };
 
+
 const Ctx = createContext<AuthCtx | null>(null);
+
+function toMillis(v: any): number | null {
+  if (!v) return null;
+
+  // Firestore Timestamp -> toDate()
+  if (typeof v?.toDate === "function") {
+    const d: Date = v.toDate();
+    const ms = d?.getTime?.();
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  // Date obj
+  if (v instanceof Date) {
+    const ms = v.getTime();
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  // string/number
+  const n = typeof v === "number" ? v : Date.parse(String(v));
+  return Number.isFinite(n) ? n : null;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -87,14 +115,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthCtx>(() => {
-    return {
-      user,
-      loading,
-      authLoading: loading, // ✅ eklendi
-      userDoc,
-      isPremium: !!userDoc?.isPremium,
-    };
-  }, [user, loading, userDoc]);
+  return {
+    user,
+    loading,
+    authLoading: loading, // ✅ alias
+    userDoc,
+    isPremium: !!userDoc?.isPremium,
+  };
+}, [user, loading, userDoc]);
+
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
