@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function BuyPage() {
   const shopierUrl =
-    process.env.NEXT_PUBLIC_SHOPIER_URL ?? "https://www.shopier.com/CornerPlus";
+    process.env.NEXT_PUBLIC_SHOPIER_URL ?? "https://www.shopier.com/CornerPlus/44336466";
 
   return (
     <div className="mx-auto max-w-2xl">
