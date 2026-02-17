@@ -207,7 +207,7 @@ export default function MatchDetailPage() {
                         onClick={() => router.push("/pro")}
                         className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"
                       >
-                        Pro Analize Git
+                        Analytics’e Git
                       </button>
 
                       {!isPremium ? (

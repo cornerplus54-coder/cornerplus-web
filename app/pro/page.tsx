@@ -165,7 +165,7 @@ export default function ProPage() {
           <div className="rounded-3xl bg-white/5 border border-white/10 p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-black">Pro Analiz</h1>
+                <h1 className="text-3xl font-black">Analytics</h1>
                 <p className="text-white/60 mt-2">
                   Bu sayfa sadece <b>Premium</b> üyelerde açılır.
                 </p>
@@ -203,7 +203,7 @@ export default function ProPage() {
         <div className="rounded-3xl bg-white/5 border border-white/10 p-7">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-black">Pro Analiz</h1>
+              <h1 className="text-4xl font-black">Analytics</h1>
               <p className="text-white/60 mt-2 text-sm">
                 Bugün: <b>{dateKey}</b> — sadece <b>tag: high</b> maçlar listelenir.
               </p>

@@ -127,7 +127,7 @@ export default function TopBar() {
                 <Tab href="/matches" label="Maçlar" />
 
                 <div className="relative">
-                  <Tab href="/pro" label="Pro Analiz" />
+                  <Tab href="/pro" label="Analytics" />
                   {!isPremium ? (
                     <span className="absolute -top-2 -right-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 border border-white/10 text-white/70">
                       Kilitli
@@ -205,7 +205,7 @@ export default function TopBar() {
             <div className="rounded-3xl border border-white/10 bg-white/5 p-3">
               <div className="grid gap-2">
                 <MobileItem href="/matches" label="Maçlar" />
-                <MobileItem href="/pro" label="Pro Analiz" />
+                <MobileItem href="/pro" label="Analytics" />
                 <MobileItem href="/profile" label="Profil" />
 
                 <button
