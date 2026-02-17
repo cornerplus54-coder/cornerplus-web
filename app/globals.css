@@ -4,12 +4,17 @@
 
 html, body {
   height: 100%;
+  width: 100%;
+  overflow-x: hidden;          /* ✅ mobilde sağa taşma engel */
+  -webkit-text-size-adjust: 100%; /* ✅ Safari font büyütme/kayma engel */
 }
 
 body {
   background: #070b18;
   color: white;
+  min-height: 100dvh;          /* ✅ iOS Safari adres barı için daha doğru */
 }
+
 /* Dark theme dropdown fix (select/options) */
 select, option {
   background-color: #0b1220;
