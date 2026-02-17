@@ -8,9 +8,11 @@ import { auth, db } from "./firebase";
 type UserDoc = {
   email?: string;
   isPremium?: boolean;
+
   premiumUntil?: any; // Firestore Timestamp olabilir
   premiumSource?: string;
   premiumUpdatedAt?: any;
+
   createdAt?: any;
   updatedAt?: any;
 };
@@ -19,13 +21,12 @@ type AuthCtx = {
   user: User | null;
   loading: boolean;
 
-  // ✅ alias (register sayfası bunu istiyor)
+  // ✅ Register sayfası bunu istiyor (alias)
   authLoading: boolean;
 
   userDoc: UserDoc | null;
   isPremium: boolean;
 };
-
 
 const Ctx = createContext<AuthCtx | null>(null);
 
@@ -115,15 +116,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthCtx>(() => {
-  return {
-    user,
-    loading,
-    authLoading: loading, // ✅ alias
-    userDoc,
-    isPremium: !!userDoc?.isPremium,
-  };
-}, [user, loading, userDoc]);
+    const premiumUntilMs = toMillis(userDoc?.premiumUntil);
+    const premiumActive =
+      premiumUntilMs != null
+        ? premiumUntilMs > Date.now() // ✅ süreye göre gerçek premium
+        : !!userDoc?.isPremium; // ✅ fallback
 
+    return {
+      user,
+      loading,
+      authLoading: loading, // ✅ alias
+      userDoc,
+      isPremium: premiumActive,
+    };
+  }, [user, loading, userDoc]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

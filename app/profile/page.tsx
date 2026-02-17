@@ -1,5 +1,6 @@
 "use client";
 
+import PremiumStatusCard from "../../components/premium-status-card";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,7 +9,7 @@ import { useAuth } from "../../lib/auth-context";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { user, loading, isPremium, signOut } = useAuth() as any;
+  const { user, loading, isPremium, userDoc, signOut } = useAuth() as any;
 
   const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "1.0.0";
   const SUPPORT_EMAIL = "support@domain.com"; // ✅ değiştir
@@ -49,6 +50,17 @@ export default function ProfilePage() {
                   <span className="text-white/50">Üyelik:</span>{" "}
                   {isPremium ? "Premium ✅" : "Standart"}
                 </div>
+                {isPremium && userDoc?.premiumUntil && (
+                  <div className="mt-1 text-sm text-emerald-400">
+                    Premium Bitiş:{" "}
+                    {new Date(
+                     userDoc.premiumUntil?.toDate
+                      ? userDoc.premiumUntil.toDate()
+                      : userDoc.premiumUntil
+                   ).toLocaleDateString("tr-TR")}
+                 </div>
+                 )} 
+
               </div>
             </div>
 
