@@ -8,24 +8,20 @@ import { todayKeyTR } from "../../../../lib/date";
 import { subscribeTodayMatches, type Match } from "../../../../lib/matches";
 
 type ProMatch = Match & {
-  pct_8_5?: number | string | null;
-  pct_9_5?: number | string | null;
-  pct_10_5?: number | string | null;
   cornerAvg?: number | string | null;
   avgCorners?: number | string | null;
   time?: string | null;
   kickoff?: string | null;
+
   tag?: string | null;
   date?: string | null;
   dateKey?: string | null;
-};
 
-function toPercent(v: any) {
-  const n = Number(v);
-  if (!Number.isFinite(n)) return 0;
-  if (n <= 1) return Math.max(0, Math.min(100, n * 100));
-  return Math.max(0, Math.min(100, n));
-}
+  // eski alanlar durabilir ama UI’da kullanmıyoruz
+  pct_8_5?: number | string | null;
+  pct_9_5?: number | string | null;
+  pct_10_5?: number | string | null;
+};
 
 function safeDecode(s: string) {
   try {
@@ -33,54 +29,6 @@ function safeDecode(s: string) {
   } catch {
     return s;
   }
-}
-
-/** Basic yatay bar (premium değil): sakin, düz */
-function BasicRow({ label, value }: { label: string; value: any }) {
-  const p = toPercent(value);
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-12 text-sm font-bold text-white/80">{label}</div>
-
-      <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-        <div
-          className="h-2 rounded-full bg-white/35"
-          style={{ width: `${p}%` }}
-        />
-      </div>
-
-      <div className="w-12 text-right text-sm font-bold text-white tabular-nums">
-        {Math.round(p)}%
-      </div>
-    </div>
-  );
-}
-
-/** Pro bölümünde kullanılacak ince dikey bar (premium) */
-function ThinBar({ label, value }: { label: string; value: any }) {
-  const p = toPercent(value);
-  const t = Math.max(0, Math.min(100, p)) / 100;
-  const hue = Math.round(10 + t * (120 - 10)); // 10..120
-  const fillColor = `hsl(${hue} 85% 55% / 0.82)`;
-
-  return (
-    <div className="w-full flex flex-col items-center">
-      <div className="text-[18px] font-extrabold text-white tabular-nums">
-        {Math.round(p)}%
-      </div>
-
-      <div className="mt-2 h-28 w-3 rounded-full bg-white/10 overflow-hidden relative">
-        <div
-          className="absolute left-0 right-0 bottom-0 rounded-full"
-          style={{ height: `${p}%`, background: fillColor }}
-        />
-      </div>
-
-      <div className="mt-2 text-xs font-bold tracking-wide text-white/75">
-        {label}
-      </div>
-    </div>
-  );
 }
 
 export default function MatchDetailPage() {
@@ -122,50 +70,12 @@ export default function MatchDetailPage() {
   const vm = useMemo(() => {
     const m = match;
     const kickoff = String(m?.time ?? m?.kickoff ?? "").trim();
-
     const avg = Number((m?.cornerAvg ?? m?.avgCorners ?? 0) as any) || 0;
-    const tag = String((m as any)?.tag ?? "").trim();
 
-    const p85 = toPercent((m as any)?.pct_8_5);
-    const p95 = toPercent((m as any)?.pct_9_5);
-    const p105 = toPercent((m as any)?.pct_10_5);
+    const tag = String((m as any)?.tag ?? "").trim().toLowerCase();
+    const isHigh = tag === "high";
 
-    const confScore = (p85 + p95 + p105) / 3;
-    const confLabel =
-      confScore >= 70
-        ? "Yüksek"
-        : confScore >= 55
-        ? "Orta"
-        : confScore > 0
-        ? "Düşük"
-        : "";
-
-    const riskLabel =
-      confLabel === "Yüksek"
-        ? "Düşük"
-        : confLabel === "Orta"
-        ? "Orta"
-        : confLabel === "Düşük"
-        ? "Yüksek"
-        : "";
-
-    const hats = [
-      { label: "8.5", pct: p85 },
-      { label: "9.5", pct: p95 },
-      { label: "10.5", pct: p105 },
-    ].sort((a, b) => b.pct - a.pct);
-
-    return {
-      kickoff,
-      avg,
-      tag,
-      p85,
-      p95,
-      p105,
-      best: hats[0],
-      confLabel,
-      riskLabel,
-    };
+    return { kickoff, avg, tag, isHigh };
   }, [match]);
 
   return (
@@ -199,20 +109,16 @@ export default function MatchDetailPage() {
 
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => 
-                    router.push(
-                      `/matches/match/${encodeURIComponent(String((match as any)?.id ?? ""))}`
-                    )
-                   }
-                  className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"
-                >
-                  Pro Analize Dön
-                </button>
-                <button
                   onClick={() => router.push("/matches")}
                   className="px-5 py-3 rounded-2xl bg-emerald-500/90 hover:bg-emerald-500 text-black font-bold"
                 >
                   Maçlara Git
+                </button>
+                <button
+                  onClick={() => router.push("/pro")}
+                  className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"
+                >
+                  Pro Analiz
                 </button>
               </div>
             </div>
@@ -240,7 +146,7 @@ export default function MatchDetailPage() {
                   ) : null}
                 </div>
 
-                {/* BASIC HERO */}
+                {/* HERO TEAMS */}
                 <div className="mt-4">
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                     <div className="min-w-0">
@@ -267,101 +173,84 @@ export default function MatchDetailPage() {
                   </div>
                 </div>
 
-                {/* BASIC INFO */}
+                {/* BASIC INFO (bahis çağrışımı yok) */}
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-                    <div className="text-xs text-white/55">Bilgiler</div>
+                    <div className="text-xs text-white/55">Özet</div>
                     <div className="mt-3 space-y-2 text-sm">
                       <div className="flex items-center justify-between">
-                        <span className="text-white/60">Tag</span>
-                        <span className="font-bold text-white/85">
-                          {vm.tag || "—"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/60">Ortalama Korner</span>
+                        <span className="text-white/60">Avg Corners</span>
                         <span className="font-bold text-white/85 tabular-nums">
                           {vm.avg ? vm.avg.toFixed(2) : "—"}
                         </span>
                       </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/60">Category</span>
+                        <span className="font-bold text-white/85">
+                          {vm.isHigh ? "Advanced" : "Standard"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-                    <div className="text-xs text-white/55">
-                      Olasılıklar (Basic)
+                    <div className="text-xs text-white/55">Analytics</div>
+                    <div className="mt-3 text-sm text-white/60 leading-relaxed">
+                      Gelişmiş metrikler ve model ekranı{" "}
+                      <b className="text-white/80">Pro Analiz</b> bölümünde
+                      sunulur.
                     </div>
-                    <div className="mt-3 space-y-3">
-                      <BasicRow label="8.5" value={vm.p85} />
-                      <BasicRow label="9.5" value={vm.p95} />
-                      <BasicRow label="10.5" value={vm.p105} />
-                    </div>
-                  </div>
-                </div>
 
-                {/* PRO SECTION */}
-                <div className="mt-5 rounded-2xl border border-white/10 overflow-hidden">
-                  <div className="px-4 py-3 bg-white/5 flex items-center justify-between">
-                    <div className="text-sm font-extrabold tracking-[0.12em] text-white/80">
-                      PRO ANALİZ
-                    </div>
-                    {!isPremium ? (
-                      <div className="text-[11px] font-bold text-white/55">
-                        Kilitli
-                      </div>
-                    ) : (
-                      <div className="text-[11px] font-bold text-emerald-200">
-                        Aktif
-                      </div>
-                    )}
-                  </div>
-
-                  {!isPremium ? (
-                    <div className="p-4 bg-black/10">
-                      <div className="text-sm font-bold">
-                        Pro içerik Premium ile açılır
-                      </div>
-                      <div className="text-white/60 text-sm mt-1">
-                        Pro özet + dikey grafik + model değerlendirmesi burada görünür.
-                      </div>
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3">
                       <button
-                        onClick={() => router.push("/buy")}
-                        className="mt-3 px-5 py-3 rounded-2xl bg-emerald-500/90 hover:bg-emerald-500 text-black font-bold"
+                        onClick={() => router.push("/pro")}
+                        className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"
                       >
-                        Paket Satın Al
+                        Pro Analize Git
                       </button>
-                    </div>
-                  ) : (
-                    <div className="p-4 bg-black/10">
-                      <div className="text-[12px] text-white/70">
-                        Pro Özet • En güçlü hat:{" "}
-                        <b className="text-white/90">
-                          {vm.best.label} ({Math.round(vm.best.pct)}%)
-                        </b>{" "}
-                        • Risk:{" "}
-                        <b className="text-white/90">{vm.riskLabel || "—"}</b>{" "}
-                        • Güven:{" "}
-                        <b className="text-white/90">{vm.confLabel || "—"}</b>
-                      </div>
 
-                      <div className="mt-4 rounded-2xl bg-white/5 border border-white/10 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs text-white/60">
-                            Üst olasılıkları
-                          </div>
-                          <div className="text-[11px] text-white/35">Pro grafik</div>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-3 gap-6">
-                          <ThinBar label="8.5" value={vm.p85} />
-                          <ThinBar label="9.5" value={vm.p95} />
-                          <ThinBar label="10.5" value={vm.p105} />
-                        </div>
-                      </div>
+                      {!isPremium ? (
+                        <button
+                          onClick={() => router.push("/buy")}
+                          className="px-5 py-3 rounded-2xl bg-emerald-500/90 hover:bg-emerald-500 text-black font-bold"
+                        >
+                          Premium Aç
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => router.push("/matches")}
+                          className="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/10 font-semibold"
+                        >
+                          Maçlara Dön
+                        </button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
+                {/* Eğer maç high ise, burada ekstra bir "bahis" hissi vermeden bilgilendir */}
+                {vm.isHigh ? (
+                  <div className="mt-5 rounded-2xl bg-black/15 border border-white/10 p-4">
+                    <div className="text-sm font-bold text-white/85">
+                      Advanced match profile
+                    </div>
+                    <div className="mt-1 text-sm text-white/55">
+                      Bu maçın gelişmiş analiz kartı ve metrikleri yalnızca{" "}
+                      <b className="text-white/75">Pro Analiz</b> ekranında
+                      görüntülenir.
+                    </div>
+                  </div>
+                ) : null}
+
+                {/* Disclaimer */}
+                <div className="mt-6 rounded-2xl bg-white/5 border border-white/10 p-4">
+                  <div className="text-[12px] text-white/55 leading-relaxed">
+                    <b className="text-white/75">Not:</b> Bu sayfa temel maç
+                    bilgilerini gösterir. Gelişmiş analiz ekranları istatistiksel
+                    göstergelerdir ve finansal yönlendirme amacı taşımaz.
+                  </div>
+                </div>
               </div>
             </div>
           ) : null}
